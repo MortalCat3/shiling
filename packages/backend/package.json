@@ -1,0 +1,32 @@
+{
+  "name": "@shiling/backend",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@shiling/contracts": "workspace:*",
+    "pg": "8.23.1",
+    "pg-boss": "12.38.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "@types/pg": "8.23.1",
+    "typescript": "6.0.3"
+  },
+  "license": "UNLICENSED"
+}

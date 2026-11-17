@@ -1,0 +1,32 @@
+{
+	admin off
+}
+
+{$SHILING_SITE_ADDRESS:http://localhost} {
+	# 不记录含 grant/token 的访问 URL。实例接入访问日志前须先做脱敏。
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy no-referrer
+	}
+	request_body {
+		max_size {$SHILING_UPLOAD_MAX_BYTES:104857600}
+	}
+
+	@api path /api /api/*
+	handle @api {
+		reverse_proxy api:3000
+	}
+	handle /health/* {
+		reverse_proxy api:3000
+	}
+	# 上传原件和动效不作为主站静态内容交付。
+	@private path /uploads/* /objects/* /preview/* /internal/*
+	handle @private {
+		respond 404
+	}
+	handle {
+		root * /srv
+		try_files {path} /index.html
+		file_server
+	}
+}

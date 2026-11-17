@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+.git
+.env
+.env.*
+!.env.example
+**/.impeccable/**
+**/secrets.local/**
+release-artifacts
+data
+backups
+findings.md
+progress.md
+task_plan.md

@@ -1,0 +1,27 @@
+{
+  "name": "@shiling/worker",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --import tsx --watch src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node --env-file-if-exists=../../.env dist/index.js"
+  },
+  "dependencies": {
+    "@shiling/backend": "workspace:*",
+    "@shiling/contracts": "workspace:*",
+    "@shiling/media": "workspace:*",
+    "pg-boss": "12.38.2"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "license": "UNLICENSED"
+}

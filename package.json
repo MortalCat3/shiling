@@ -1,0 +1,50 @@
+{
+  "name": "shiling",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "license": "UNLICENSED",
+  "type": "module",
+  "packageManager": "pnpm@12.21.0",
+  "engines": {
+    "node": ">=24.22.3 <25",
+    "pnpm": "12.21.0"
+  },
+  "scripts": {
+    "preinstall": "node scripts/check-runtime.mjs",
+    "dev": "corepack pnpm --filter @shiling/web dev",
+    "dev:web": "corepack pnpm --filter @shiling/web dev",
+    "dev:api": "corepack pnpm --filter @shiling/api dev",
+    "dev:preview": "corepack pnpm --filter @shiling/preview dev",
+    "dev:worker": "corepack pnpm --filter @shiling/worker dev",
+    "restore:safety": "corepack pnpm --filter @shiling/api restore-safety",
+    "typecheck": "corepack pnpm -r --if-present typecheck",
+    "build": "corepack pnpm -r --if-present build",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:project": "node scripts/check-project.mjs",
+    "smoke": "node scripts/smoke.mjs",
+    "test": "corepack pnpm test:integration",
+    "test:frontend": "node --test tests/frontend/*.test.mjs",
+    "test:api": "node --test tests/api/*.test.mjs",
+    "test:integration": "node --test --test-concurrency=1 tests/integration/*.test.mjs",
+    "test:e2e:http": "node tests/e2e/http-regression.mjs",
+    "test:e2e:instance": "node tests/e2e/live-instance.mjs",
+    "test:e2e:workbench": "node tests/e2e/workbench-regression.mjs",
+    "check": "node scripts/check-runtime.mjs && corepack pnpm check:project && corepack pnpm format:check && corepack pnpm lint && corepack pnpm build && corepack pnpm typecheck && corepack pnpm smoke && corepack pnpm test:api && corepack pnpm test:frontend && corepack pnpm test:integration",
+    "check:isolated": "node scripts/check-isolated.mjs"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.2",
+    "@typescript-eslint/parser": "8.72.2",
+    "eslint": "10.15.0",
+    "eslint-plugin-vue": "10.12.1",
+    "playwright": "1.65.1",
+    "prettier": "3.10.1",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.72.2",
+    "vue-eslint-parser": "10.4.2"
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "date": "2026-11-17",
+  "environment": {
+    "docker": "29.8.2",
+    "compose": "5.5.1",
+    "containerArchitecture": "linux/arm64",
+    "engineVcpu": 10,
+    "engineMemoryBytes": 8319504384,
+    "node": "24.22.3",
+    "pnpm": "12.21.0",
+    "postgres": "18.7",
+    "caddy": "2.11.9",
+    "workerFfmpeg": "5.1.9"
+  },
+  "fixtures": [
+    {
+      "name": "noise.png",
+      "type": "image",
+      "bytes": 4728057,
+      "sha256": "3f5022658f4117f4ac42c3532f07e18f8f1fb4d091a934856ad5059c3df36ef5"
+    },
+    {
+      "name": "noise.jpg",
+      "type": "image",
+      "bytes": 1296421,
+      "sha256": "dd697417429feffd69889689850dd486a73ad48cc6ed267e40e20c1909c06205"
+    },
+    {
+      "name": "noise.webp",
+      "type": "image",
+      "bytes": 1177784,
+      "sha256": "60ebc41b9b7187459fe507f0ab25ddded0feed615726ee7de1ebd1594f59fbc1"
+    },
+    {
+      "name": "test-pattern.mp4",
+      "type": "video",
+      "bytes": 2289354,
+      "sha256": "5fd455fb9d00bc7e40307bfc87781d14aa991b96ac89e2f32ae0b936e6ceb7ba"
+    }
+  ],
+  "stages": [
+    {
+      "concurrency": 1,
+      "count": 4,
+      "totalBytes": 9491616,
+      "uploadBurstSeconds": 0.13,
+      "allReadySeconds": 5.28,
+      "endToEndP50Ms": 2196,
+      "endToEndP95Ms": 5171.3,
+      "transferP95Ms": 42.3,
+      "requestP95Ms": 36.6,
+      "failed": 0
+    },
+    {
+      "concurrency": 4,
+      "count": 12,
+      "totalBytes": 28474848,
+      "uploadBurstSeconds": 0.27,
+      "allReadySeconds": 11.52,
+      "endToEndP50Ms": 5283.4,
+      "endToEndP95Ms": 11318.6,
+      "transferP95Ms": 62.6,
+      "requestP95Ms": 36.7,
+      "failed": 0
+    },
+    {
+      "concurrency": 8,
+      "count": 24,
+      "totalBytes": 56949696,
+      "uploadBurstSeconds": 0.4,
+      "allReadySeconds": 19.77,
+      "endToEndP50Ms": 10942.7,
+      "endToEndP95Ms": 16966.2,
+      "transferP95Ms": 144.5,
+      "requestP95Ms": 32,
+      "failed": 0
+    }
+  ],
+  "expectedFailures": [
+    "超过 100 MiB 的声明在创建前返回 413",
+    "动效上传 403",
+    "损坏图片在核验阶段安全失败",
+    "摘要不符安全失败：UPLOAD_CONTENT_MISMATCH",
+    "中断上传进入失败态，重新传输后 ready 且摘要一致"
+  ],
+  "healthSamples": 41,
+  "healthP95Ms": 8.2,
+  "dockerStatsSamples": 19,
+  "sampledPeaks": {
+    "api": {
+      "memoryMiB": 93.18,
+      "cpuPercent": 46.51,
+      "pids": 23
+    },
+    "postgres": {
+      "memoryMiB": 102.3,
+      "cpuPercent": 41.53,
+      "pids": 27
+    },
+    "preview": {
+      "memoryMiB": 37.82,
+      "cpuPercent": 0.14,
+      "pids": 19
+    },
+    "web": {
+      "memoryMiB": 27.46,
+      "cpuPercent": 12.33,
+      "pids": 15
+    },
+    "worker": {
+      "memoryMiB": 826.3,
+      "cpuPercent": 204.78,
+      "pids": 80
+    }
+  },
+  "containers": [
+    {
+      "service": "api",
+      "running": true,
+      "oomKilled": false,
+      "restarts": 0,
+      "memoryLimit": 536870912,
+      "cpuQuota": 1000000000,
+      "pidsLimit": 128
+    },
+    {
+      "service": "postgres",
+      "running": true,
+      "oomKilled": false,
+      "restarts": 0,
+      "memoryLimit": 0,
+      "cpuQuota": 0,
+      "pidsLimit": null
+    },
+    {
+      "service": "preview",
+      "running": true,
+      "oomKilled": false,
+      "restarts": 0,
+      "memoryLimit": 268435456,
+      "cpuQuota": 500000000,
+      "pidsLimit": 64
+    },
+    {
+      "service": "web",
+      "running": true,
+      "oomKilled": false,
+      "restarts": 0,
+      "memoryLimit": 0,
+      "cpuQuota": 0,
+      "pidsLimit": null
+    },
+    {
+      "service": "worker",
+      "running": true,
+      "oomKilled": false,
+      "restarts": 0,
+      "memoryLimit": 1073741824,
+      "cpuQuota": 2000000000,
+      "pidsLimit": 128
+    }
+  ],
+  "proxy": {
+    "clientA": [401, 401, 401, 401, 401, 401, 401, 401, 401, 401, 429],
+    "clientB": 401
+  },
+  "backlog": {
+    "count": 6,
+    "acceptedWhileWorkerStopped": true,
+    "readyAfterRestartSeconds": 6.46,
+    "failed": 0
+  },
+  "byteBoundary": {
+    "exactBytes": 104857600,
+    "transferMs": 833.3,
+    "readySeconds": 2.39,
+    "originalHashVerified": true,
+    "overLimitDeclaration": 413,
+    "overLimitContentLength": 413,
+    "overLimitBrandingFile": 413,
+    "note": "低像素 PNG 的合法私有 ancillary chunk 填充；只验证字节边界与流式交付，不代表高像素或长视频容量。"
+  },
+  "queueAudit": {
+    "maxProcessingConcurrency": 2,
+    "unfinishedJobs": 0,
+    "runningProcessingAttempts": 0,
+    "partialUploadFiles": 0
+  },
+  "scope": "Local CA explicitly trusted only by test clients; loopback synthetic workload, not production SLO or capacity ceiling."
+}

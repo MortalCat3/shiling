@@ -1,0 +1,209 @@
+name: ${COMPOSE_PROJECT_NAME:-shiling}
+
+x-runtime: &runtime
+  image: shiling-runtime:${SHILING_RELEASE:-local}
+  build:
+    context: ../..
+    dockerfile: deploy/images/Dockerfile
+    target: runtime
+    args:
+      NODE_IMAGE: ${SHILING_NODE_IMAGE:-node:24.22.3-bookworm-slim}
+      CADDY_IMAGE: ${SHILING_CADDY_IMAGE:-caddy:2.11.9-alpine}
+  init: true
+  read_only: true
+  security_opt: [no-new-privileges:true]
+  cap_drop: [ALL]
+  tmpfs: ['/tmp:size=256m,mode=1777']
+  networks: [backend]
+  stop_grace_period: 45s
+
+x-app-environment: &app-environment
+  NODE_ENV: production
+  TZ: UTC
+  SHILING_LOG_LEVEL: ${SHILING_LOG_LEVEL:-info}
+  SHILING_DATABASE_URL_FILE: /run/secrets/database_url
+  SHILING_STORAGE_DRIVER: local
+  SHILING_LOCAL_STORAGE_ROOT: /var/lib/shiling/objects
+  SHILING_APP_ORIGIN: ${SHILING_APP_ORIGIN:-http://localhost:8080}
+  SHILING_PUBLIC_ORIGIN: ${SHILING_PUBLIC_ORIGIN:-http://localhost:8080}
+  SHILING_PREVIEW_ORIGIN: ${SHILING_PREVIEW_ORIGIN:-http://preview.localhost:8080}
+  SHILING_COOKIE_SECURE: ${SHILING_COOKIE_SECURE:-false}
+  SHILING_SESSION_TTL_HOURS: ${SHILING_SESSION_TTL_HOURS:-24}
+  SHILING_UPLOAD_MAX_BYTES: ${SHILING_UPLOAD_MAX_BYTES:-104857600}
+  SHILING_TEMP_OBJECT_RETENTION_HOURS: ${SHILING_TEMP_OBJECT_RETENTION_HOURS:-24}
+  SHILING_CLEANUP_INTERVAL_SECONDS: ${SHILING_CLEANUP_INTERVAL_SECONDS:-900}
+  SHILING_CLEANUP_BATCH_SIZE: ${SHILING_CLEANUP_BATCH_SIZE:-25}
+  # 普通应用容器不是不可信代码沙箱，本清单不提供开启执行的参数。
+  SHILING_PREVIEW_EXECUTION_ENABLED: 'false'
+
+services:
+  postgres:
+    image: shiling-postgres:${SHILING_RELEASE:-local}
+    build:
+      context: ../..
+      dockerfile: deploy/images/Dockerfile
+      target: postgres
+      args:
+        POSTGRES_IMAGE: ${SHILING_POSTGRES_IMAGE:-postgres:18.7-bookworm}
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+      POSTGRES_INITDB_ARGS: --encoding=UTF8 --locale=C.UTF-8 --auth-host=scram-sha-256
+      SHILING_DATABASE_NAME: shiling
+      SHILING_APP_DB_PASSWORD_FILE: /run/secrets/app_password
+      SHILING_MIGRATION_DB_PASSWORD_FILE: /run/secrets/migration_password
+      TZ: UTC
+    secrets: [postgres_password, app_password, migration_password]
+    volumes:
+      - postgres_data:/var/lib/postgresql
+    networks: [backend]
+    healthcheck:
+      test: [CMD, /opt/shiling/healthcheck.sh]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    # 不向宿主暴露 5432；不会连接或修改宿主的 PostgreSQL。
+
+  migrate:
+    <<: *runtime
+    profiles: [tools]
+    command: [node, apps/api/dist/migrate.js]
+    environment:
+      NODE_ENV: production
+      SHILING_MIGRATION_DATABASE_URL_FILE: /run/secrets/migration_database_url
+      SHILING_DATABASE_OWNER_ROLE: shiling_owner
+      SHILING_DATABASE_RUNTIME_ROLE: shiling_app
+    secrets: [migration_database_url]
+    depends_on:
+      postgres: { condition: service_healthy }
+    restart: 'no'
+
+  api:
+    <<: *runtime
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 128
+    command: [node, apps/api/dist/index.js]
+    environment:
+      <<: *app-environment
+      SHILING_API_HOST: 0.0.0.0
+      SHILING_API_PORT: 3000
+      SHILING_TRUSTED_PROXY_HOST: web
+      SHILING_SETUP_TOKEN_FILE: /run/secrets/setup_token
+      SHILING_CSRF_SECRET_FILE: /run/secrets/csrf_secret
+      SHILING_DELIVERY_SECRET_FILE: /run/secrets/delivery_secret
+    secrets: [database_url, setup_token, csrf_secret, delivery_secret]
+    volumes: [objects:/var/lib/shiling]
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3000/health/ready').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 10s
+      timeout: 4s
+      retries: 6
+      start_period: 20s
+    restart: unless-stopped
+
+  worker:
+    <<: *runtime
+    mem_limit: 1g
+    cpus: 2.0
+    pids_limit: 128
+    command: [node, apps/worker/dist/index.js]
+    environment:
+      <<: *app-environment
+      SHILING_MEDIA_TEMP_ROOT: /tmp/shiling-media
+      SHILING_VERIFY_CONCURRENCY: ${SHILING_VERIFY_CONCURRENCY:-2}
+      SHILING_PROCESS_CONCURRENCY: ${SHILING_PROCESS_CONCURRENCY:-2}
+    secrets: [database_url]
+    volumes: [objects:/var/lib/shiling]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+
+  preview:
+    <<: *runtime
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 64
+    command: [node, apps/preview/dist/index.js]
+    environment:
+      NODE_ENV: production
+      SHILING_PREVIEW_HOST: 0.0.0.0
+      SHILING_PREVIEW_PORT: 3001
+      SHILING_PREVIEW_EXECUTION_ENABLED: 'false'
+      SHILING_LOG_LEVEL: ${SHILING_LOG_LEVEL:-info}
+    # 不挂载原件、数据库 URL、主站认证密钥或存储长期凭据。
+    healthcheck:
+      test:
+        [
+          CMD,
+          node,
+          -e,
+          "fetch('http://127.0.0.1:3001/health/live').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 15s
+      timeout: 4s
+      retries: 3
+    restart: unless-stopped
+
+  web:
+    image: shiling-web:${SHILING_RELEASE:-local}
+    build:
+      context: ../..
+      dockerfile: deploy/images/Dockerfile
+      target: web
+      args:
+        NODE_IMAGE: ${SHILING_NODE_IMAGE:-node:24.22.3-bookworm-slim}
+        CADDY_IMAGE: ${SHILING_CADDY_IMAGE:-caddy:2.11.9-alpine}
+    environment:
+      SHILING_SITE_ADDRESS: ${SHILING_SITE_ADDRESS:-http://localhost}
+      SHILING_UPLOAD_MAX_BYTES: ${SHILING_UPLOAD_MAX_BYTES:-104857600}
+    ports:
+      - '${SHILING_BIND_ADDRESS:-127.0.0.1}:${SHILING_HTTP_PORT:-8080}:80'
+      - '${SHILING_BIND_ADDRESS:-127.0.0.1}:${SHILING_HTTPS_PORT:-8443}:443'
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [edge, backend]
+    depends_on:
+      api: { condition: service_healthy }
+    restart: unless-stopped
+    security_opt: [no-new-privileges:true]
+
+networks:
+  edge: {}
+  backend:
+    internal: true
+
+volumes:
+  postgres_data: {}
+  objects: {}
+  caddy_data: {}
+  caddy_config: {}
+
+secrets:
+  postgres_password:
+    file: ${SHILING_POSTGRES_PASSWORD_FILE:-./secrets.local/postgres-password}
+  app_password:
+    file: ${SHILING_APP_PASSWORD_FILE:-./secrets.local/app-password}
+  migration_password:
+    file: ${SHILING_MIGRATION_PASSWORD_FILE:-./secrets.local/migration-password}
+  database_url:
+    file: ${SHILING_DATABASE_URL_FILE:-./secrets.local/database-url}
+  migration_database_url:
+    file: ${SHILING_MIGRATION_DATABASE_URL_FILE:-./secrets.local/migration-database-url}
+  setup_token:
+    file: ${SHILING_SETUP_TOKEN_FILE:-./secrets.local/setup-token}
+  csrf_secret:
+    file: ${SHILING_CSRF_SECRET_FILE:-./secrets.local/csrf-secret}
+  delivery_secret:
+    file: ${SHILING_DELIVERY_SECRET_FILE:-./secrets.local/delivery-secret}

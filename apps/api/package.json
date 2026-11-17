@@ -1,0 +1,38 @@
+{
+  "name": "@shiling/api",
+  "version": "0.1.0-rc.1",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "dev": "node --env-file-if-exists=../../.env --import tsx --watch src/index.ts",
+    "migrate": "node --env-file-if-exists=../../.env dist/migrate.js",
+    "migrate:dev": "node --env-file-if-exists=../../.env --import tsx src/migrate.ts",
+    "restore-safety": "node --env-file-if-exists=../../.env dist/restore-safety.js",
+    "restore-safety:dev": "node --env-file-if-exists=../../.env --import tsx src/restore-safety.ts",
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "start": "node --env-file-if-exists=../../.env dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/cookie": "11.1.5",
+    "@fastify/helmet": "13.2.0",
+    "@fastify/multipart": "10.1.8",
+    "@fastify/rate-limit": "11.2.2",
+    "@fastify/type-provider-typebox": "6.3.0",
+    "@shiling/backend": "workspace:*",
+    "@shiling/contracts": "workspace:*",
+    "@sinclair/typebox": "0.34.52",
+    "fastify": "5.12.8",
+    "pg-boss": "12.38.2",
+    "sharp": "0.35.5"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  },
+  "license": "UNLICENSED"
+}

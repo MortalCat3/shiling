@@ -1,0 +1,31 @@
+node_modules/
+dist/
+coverage/
+.pnpm-store/
+.cache/
+.env
+.env.*
+!.env.example
+*.local
+*.log
+*.tsbuildinfo
+.DS_Store
+data/
+backups/
+playwright-report/
+test-results/
+# 本地评审与工作记录保留在本机，不进入首个发行快照。
+.impeccable/
+/findings.md
+/progress.md
+/task_plan.md
+# 部署凭据、数据库副本及离线镜像只能存于受控本地目录。
+secrets.local/
+*.pem
+*.key
+*.p12
+*.pfx
+*.dump
+*.sqlite
+*.sqlite3
+/release-artifacts/
