@@ -1,0 +1,59 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-11-17",
+  "sourceCommit": "97e0055f647ae6e2910e1852876ce71196ebacfd",
+  "environment": {
+    "host": "macOS ARM64",
+    "containerPlatform": "linux/arm64",
+    "node": "24.22.3",
+    "pnpm": "12.21.0",
+    "postgres": "18.7"
+  },
+  "sourceChecks": {
+    "cleanIndexExportFiles": 337,
+    "frozenInstall": true,
+    "fullCheck": "passed",
+    "apiTests": 3,
+    "frontendTests": 9,
+    "integrationTests": 7,
+    "skippedTests": 0,
+    "privatePathsOrKeysFound": 0,
+    "stagedGitleaksFindings": 0,
+    "gitleaksVersion": "8.30.1",
+    "historyGitleaksFindings": 0
+  },
+  "archive": {
+    "reload": "passed",
+    "allBlobChecksums": "passed",
+    "blobs": 37,
+    "wrongChecksumRejected": true
+  },
+  "containerChecks": [
+    "容器首次启动、正式三角色迁移与重复迁移",
+    "Caddy 同源入口通过三批工作台 12 组真实 API 回归",
+    "容器最小权限、数据库所有权、静态路径隔离、HTTP 回归与动效 403",
+    "持久化前素材、图片/视频全部产物、品牌与集合摘要采样",
+    "数据库及全部服务重启、移除重建容器后命名卷持久化",
+    "重建容器后数据库内容、品牌和全部媒体摘要一致，新任务仍可完成",
+    "恢复前凭据、公开 grant 与待处理任务采样",
+    "停止全部写入者后数据库与 Local 对象一致备份、归档与摘要校验",
+    "原实例备份点后写入标记，恢复副本必须回到备份点",
+    "全新卷还原、灾备安全 dry-run/apply/verify 后启动新服务",
+    "旧会话/邀请/恢复令牌/未到期 grant 失效，旧任务撤销，公开撤回且数据回到备份点",
+    "恢复后全部图片/视频产物与品牌摘要一致，新 worker 可完成新上传",
+    "恢复实例签名与初始化密钥轮换并重建应用容器",
+    "轮换密钥后重新认证、公开重开不复活快照、管理员不得代发布、所有者重新公开与游客下载",
+    "只重启 PostgreSQL 后 API 重新连接、旧素材可读、新上传可由 worker 处理",
+    "停止本次两组验收容器，保留私有备份和命名卷"
+  ],
+  "restoreWindow": {
+    "startedAt": "2026-11-17T07:16:22.842Z",
+    "readyAt": "2026-11-17T07:16:46.207Z",
+    "scope": "restore startup only; not a production RTO"
+  },
+  "motionExecutionEnabled": false,
+  "productionDeployed": false,
+  "pushed": false,
+  "exactContainerDigestsVerified": true,
+  "acceptanceServicesStopped": true
+}

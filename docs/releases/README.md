@@ -6,9 +6,12 @@
 
 发布分两次提交：先提交经过检查的源码，再提交镜像构建和验收产生的脱敏清单。注释标签 `v0.1.0-rc.1` 指向第二次提交；镜像 OCI revision 指向第一次源码提交。这样避免让源码提交哈希和包含该哈希的清单互相依赖。两次提交之间只能新增发布记录，不能修改应用、依赖、构建文件或运行配置。
 
+本版实际结果见 [0.1.0-rc.1 验收记录](0.1.0-rc.1/README.md)。
+
 每版保留以下信息：
 
-- `manifest.json`：源码 commit/tree、锁文件 SHA-256、基础镜像 digest、平台、三类镜像的 manifest/config 摘要、本地 Image ID、离线包大小和 SHA-256。
+- `manifest.json`：源码 commit/tree、锁文件 SHA-256、基础镜像 digest、平台、三类镜像的 manifest 摘要、本地 Image ID、离线包大小和 SHA-256。
+- `components.json`：本版从离线包读取的 OCI config 摘要及各镜像的操作系统包版本；Buildx 未返回的 config 摘要不从本地 Image ID 猜测。这是组件清单，不是漏洞扫描或许可证审查结论。
 - `compose.images.json`：将六个服务绑定到上述三类镜像的内容摘要，禁止自动拉取；运行时使用 `--no-build --pull never`。
 - 本地 `release-artifacts/<版本>/`：完整镜像 tar、SHA256SUMS、构建元数据及清单，被 Git 忽略。构建元数据可能含本机路径，不随源码分发。
 - `docs/releases/<版本>/`：只保存脱敏清单和实际验收结果，不包含密钥、Cookie、原始日志、截图或备份。

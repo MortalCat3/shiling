@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "version": "0.1.0-rc.1",
+  "sourceCommit": "97e0055f647ae6e2910e1852876ce71196ebacfd",
+  "sourceTree": "4492dd1e057c07a0cf143c6cbcc2bf2e753f4ea2",
+  "platform": "linux/arm64",
+  "createdAt": "2026-11-17T07:12:28.172Z",
+  "packageManager": "pnpm@12.21.0",
+  "lockfileSha256": "8f0c472a41fe4f0fdcbe87b381dbc91c61ba9dc06e2a3715afc873178b0086fa",
+  "baseImages": {
+    "NODE_IMAGE": "node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54",
+    "CADDY_IMAGE": "caddy:2.11.9-alpine@sha256:003a97808e781aa9f7e75cc2f43d34d461099031faf5e20faefb9f61126836f0",
+    "POSTGRES_IMAGE": "postgres:18.7-bookworm@sha256:ece55f7868da684e400f82f1030a050718adbdd65c23aa500c486f6e2950dc0f"
+  },
+  "images": {
+    "runtime": {
+      "tag": "shiling-runtime:0.1.0-rc.1",
+      "reference": "shiling-runtime@sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "manifestDigest": "sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "localImageId": "sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e"
+    },
+    "web": {
+      "tag": "shiling-web:0.1.0-rc.1",
+      "reference": "shiling-web@sha256:4cf06db9c266724a62f6c2260f32e716133f100c9ef8f4fdbea8650d4bb84ad2",
+      "manifestDigest": "sha256:4cf06db9c266724a62f6c2260f32e716133f100c9ef8f4fdbea8650d4bb84ad2",
+      "localImageId": "sha256:4cf06db9c266724a62f6c2260f32e716133f100c9ef8f4fdbea8650d4bb84ad2"
+    },
+    "postgres": {
+      "tag": "shiling-postgres:0.1.0-rc.1",
+      "reference": "shiling-postgres@sha256:d4cd7ef1345899f50f49c82ca545b8c9db56451ee2c795e151cedf78b3ae503e",
+      "manifestDigest": "sha256:d4cd7ef1345899f50f49c82ca545b8c9db56451ee2c795e151cedf78b3ae503e",
+      "localImageId": "sha256:d4cd7ef1345899f50f49c82ca545b8c9db56451ee2c795e151cedf78b3ae503e"
+    }
+  },
+  "distribution": "local-only",
+  "motionExecutionEnabled": false,
+  "archive": {
+    "file": "shiling-0.1.0-rc.1-linux-arm64.docker.tar",
+    "sha256": "a22e66002b2f2b71054206a946ddb94ac3b4ab727284aab2288f2a4949e8a7a3",
+    "bytes": 450359296
+  }
+}

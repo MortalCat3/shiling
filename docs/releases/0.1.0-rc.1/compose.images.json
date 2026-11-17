@@ -1,0 +1,28 @@
+{
+  "services": {
+    "api": {
+      "image": "shiling-runtime@sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "pull_policy": "never"
+    },
+    "worker": {
+      "image": "shiling-runtime@sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "pull_policy": "never"
+    },
+    "preview": {
+      "image": "shiling-runtime@sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "pull_policy": "never"
+    },
+    "migrate": {
+      "image": "shiling-runtime@sha256:ae47d2d9db277ba685d1bb9971feda7ed441e1b133f4636f28a8e3753c7b102e",
+      "pull_policy": "never"
+    },
+    "web": {
+      "image": "shiling-web@sha256:4cf06db9c266724a62f6c2260f32e716133f100c9ef8f4fdbea8650d4bb84ad2",
+      "pull_policy": "never"
+    },
+    "postgres": {
+      "image": "shiling-postgres@sha256:d4cd7ef1345899f50f49c82ca545b8c9db56451ee2c795e151cedf78b3ae503e",
+      "pull_policy": "never"
+    }
+  }
+}
