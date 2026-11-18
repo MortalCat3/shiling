@@ -1,8 +1,10 @@
 # Compose 独立部署
 
-这里提供 Local 存储基线，不连接宿主现有 PostgreSQL。示例只监听 `127.0.0.1:8080`；执行以下命令会创建一个新实例的数据卷，只有准备实际运行新实例时才执行。尚未完成的验收见[部署验证记录](../../docs/operations/deployment-validation.md)。
+这里默认提供 Local 存储基线，不连接宿主现有 PostgreSQL。可选阿里云 OSS 使用 [compose.oss.yaml](compose.oss.yaml)，按 [OSS 运维](../../docs/operations/oss-storage.md)配置与验收。示例只监听 `127.0.0.1:8080`；执行以下命令会创建一个新实例的数据卷，只有准备实际运行新实例时才执行。尚未完成的验收见[部署验证记录](../../docs/operations/deployment-validation.md)。
 
 ## 新实例顺序
+
+如果复用同一服务器上已有的 PostgreSQL Docker 容器，请先使用[已有容器接入说明](postgres-external.md)及对应覆盖文件；下文启动内置 postgres 和首次初始化的步骤不适用于已有数据库。
 
 从仓库根目录执行，先使用项目固定的 Node 24.22.3。`create-secrets.mjs` 只生成本机随机凭据，不输出值，不覆盖已有 `secrets.local` 目录；中途失败须检查目录后再处理，不应用于轮换密码。
 
@@ -47,7 +49,7 @@ SHILING_COOKIE_SECURE=true
 
 使用域名而非 `http://` 站点地址时，Caddy 按其[自动 HTTPS 规则](https://caddyserver.com/docs/automatic-https)申请证书；需要可用的域名验证、80/443 和出站访问。只把 `SHILING_SITE_ADDRESS` 改为 HTTPS 而保留错误来源或不安全 cookie 配置是不完整部署。首期推荐公开页面与主站同源；独立公开来源需额外配置真实反代和验收。
 
-API、worker、PostgreSQL 和 preview 只接入内部网络，不发布宿主端口。Web 接入边缘及内部网络；主站 `/api`、`/api/*` 和 `/health/*` 原样转发 API，其他前端页面使用 SPA 兜底，原件/动效路径不会映射为静态目录。Caddy 不配置访问日志，避免把含 grant 的 URL 写入日志；如需添加，先实现查询参数与凭据脱敏。
+Local 基线中 API、worker、PostgreSQL 和 preview 只接入内部网络，不发布宿主端口。Web 接入边缘及内部网络；主站 `/api`、`/api/*` 和 `/health/*` 原样转发 API，其他前端页面使用 SPA 兜底，原件/动效路径不会映射为静态目录。Caddy 不配置访问日志，避免把含 grant 的 URL 写入日志；如需添加，先实现查询参数与凭据脱敏。
 
 `preview` 仅为独立进程，其执行开关固定为 false，没有公网路由。今后启用必须使用独立主机名、独立授权交付和资源/网络隔离；主站 cookie 必须为 host-only。只更换端口不隔离 cookie，也不能通过更改环境变量就宣布安全验收通过。
 
@@ -76,4 +78,4 @@ worker 明确使用 `/tmp/shiling-media` 处理临时媒体，避免默认相对
 
 ## 运维边界
 
-版本发布使用不可变 `SHILING_RELEASE` 标签，生产记录镜像 digest、源码版本、锁文件和系统组件清单。这里不提供自动发布，也不运行数据库升级或删除已有卷。备份、恢复、升级、回滚按[运维手册](../../docs/operations/backup-restore-upgrade.md)进行；服务器执行隔离、实际 S3 和较早备份安全恢复未通过时，对应能力不能开放。
+版本发布使用不可变 `SHILING_RELEASE` 标签，生产记录镜像 digest、源码版本、锁文件和系统组件清单。这里不提供自动发布，也不运行数据库升级或删除已有卷。备份、恢复、升级、回滚按[运维手册](../../docs/operations/backup-restore-upgrade.md)进行；服务器执行隔离、真实对象存储目标和目标环境恢复未通过时，对应能力不能开放。

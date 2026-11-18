@@ -1,3 +1,4 @@
+import { requireStorageLocation } from '../../storage/binding.js';
 import { randomUUID } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 import { mkdtemp, realpath, rm, lstat } from 'node:fs/promises';
@@ -53,6 +54,8 @@ interface VerificationAttempt {
 interface ObjectRow {
   id: string;
   object_key: string;
+  backend_key: string;
+  namespace: string;
   state: string;
   bytes: string | null;
   sha256: string | null;
@@ -335,7 +338,7 @@ export function createProcessingService({
         }
         const object = (
           await tx.query<ObjectRow>(
-            'SELECT id,object_key,state,bytes,sha256 FROM shiling.storage_objects WHERE upload_attempt_id=$1',
+            'SELECT id,object_key,backend_key,namespace,state,bytes,sha256 FROM shiling.storage_objects WHERE upload_attempt_id=$1',
             [task.uploadAttemptId],
           )
         ).rows[0];
@@ -350,6 +353,7 @@ export function createProcessingService({
       });
       if (!claim) return;
       try {
+        requireStorageLocation(storage, claim.object);
         const inspection = await storage.withLocalFile(claim.object.object_key, (inputPath) =>
           media.verify({ inputPath, originalFilename: claim.item.original_filename }),
         );
@@ -443,8 +447,14 @@ export function createProcessingService({
         if (job.state === 'running' && job.deadline_at && job.deadline_at.getTime() > Date.now())
           return null;
         const original = (
-          await tx.query<{ id: string; object_key: string; type_key: MediaTypeKey }>(
-            `SELECT o.id,o.object_key,a.type_key FROM shiling.artifacts f JOIN shiling.storage_objects o ON o.id=f.storage_object_id
+          await tx.query<{
+            id: string;
+            object_key: string;
+            backend_key: string;
+            namespace: string;
+            type_key: MediaTypeKey;
+          }>(
+            `SELECT o.id,o.object_key,o.backend_key,o.namespace,a.type_key FROM shiling.artifacts f JOIN shiling.storage_objects o ON o.id=f.storage_object_id
           JOIN shiling.assets a ON a.id=$2 WHERE f.version_id=$1 AND f.role='original' AND o.state='stored' AND o.integrity_state='verified'`,
             [row.version_id, row.asset_id],
           )
@@ -499,6 +509,7 @@ export function createProcessingService({
           );
         outputDirectory = await mkdtemp(join(temporaryDirectory, 'shiling-media-'));
         const directory = await realpath(outputDirectory);
+        requireStorageLocation(storage, claim.original);
         const result = await storage.withLocalFile(claim.original.object_key, (inputPath) =>
           media.process({
             inputPath,

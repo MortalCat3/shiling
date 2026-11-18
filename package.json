@@ -31,8 +31,11 @@
     "test:e2e:http": "node tests/e2e/http-regression.mjs",
     "test:e2e:instance": "node tests/e2e/live-instance.mjs",
     "test:e2e:workbench": "node tests/e2e/workbench-regression.mjs",
-    "check": "node scripts/check-runtime.mjs && corepack pnpm check:project && corepack pnpm format:check && corepack pnpm lint && corepack pnpm build && corepack pnpm typecheck && corepack pnpm smoke && corepack pnpm test:api && corepack pnpm test:frontend && corepack pnpm test:integration",
-    "check:isolated": "node scripts/check-isolated.mjs"
+    "check": "node scripts/check-runtime.mjs && corepack pnpm check:project && corepack pnpm format:check && corepack pnpm lint && corepack pnpm build && corepack pnpm typecheck && corepack pnpm smoke && corepack pnpm test:storage && corepack pnpm test:api && corepack pnpm test:frontend && corepack pnpm test:integration",
+    "check:isolated": "node scripts/check-isolated.mjs",
+    "test:storage": "node --test tests/contracts/*.test.mjs",
+    "test:oss": "node tests/e2e/oss-acceptance.mjs",
+    "storage:backup": "corepack pnpm --filter @shiling/api storage-backup"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

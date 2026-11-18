@@ -1,6 +1,6 @@
 # 拾灵文档
 
-首期业务实现已经进入 **本地集成与内部试用验收阶段**。账户与权限、Local 上传、图片/MP4 处理、素材库整理、公开快照、游客下载和首期管理入口已有正式代码；真实 PostgreSQL 领域集成与本地 API/worker 闭环已有验证证据。当前状态仍不等于生产就绪或开源发行完成。
+首期业务实现已经进入 **本地集成与内部试用验收阶段**。账户与权限、Local/OSS 存储接入、图片/MP4 处理、素材库整理、公开快照、游客下载和首期管理入口已有正式代码；真实 PostgreSQL 领域集成与本地 API/worker 闭环已有验证证据。当前状态仍不等于生产就绪或开源发行完成。
 
 ## 建议阅读顺序
 
@@ -22,6 +22,10 @@
 | [备份、恢复、升级与回滚](operations/backup-restore-upgrade.md)                  | 新系统运维顺序与灾备安全门槛；本机 Docker 恢复演练已通过 |
 | [待提供媒体与部署信息](operations/m0-required-inputs.md)                        | 代表性媒体、规模、S3、生产域名和恢复目标的集中清单       |
 
+新增：[OSS 配置与成套恢复](operations/oss-storage.md)、[OSS 验收记录](operations/oss-validation.md)。
+
+准备服务器部署时，先填写[部署配置总表与信息交接单](operations/deployment-inputs.md)，统一确认服务器、域名、数据库、OSS、密钥文件与备份信息。
+
 ## 已确认设计
 
 - 每个部署实例服务一个团队，不迁移历史数据。
@@ -41,7 +45,7 @@
 | 身份、素材整理、公开与撤回   | 正式代码和真实 PostgreSQL 集成测试已覆盖主要首期路径                                                                                           |
 | Web 页面                     | 正式入口使用真实 API；B 三批另有隔离的开发演示入口，见[界面验收](operations/interface-workbench-validation.md)；真实设备与完整异常矩阵仍待扩展 |
 | 动效                         | HTML/ZIP 结构检查已实现；执行器隔离与真实录制封面未具备，因此上传与执行保持关闭，不属于可用素材类型                                            |
-| S3                           | 只有适配边界和验收矩阵；当前配置只接受 `local`                                                                                                 |
+| OSS / S3                     | 已新增阿里云 `oss`；Local 保留，其他 S3 未实现；真实 OSS 验收待配置，见 [OSS 说明](operations/oss-storage.md)                                  |
 | Docker/生产环境              | 本机 Docker/HTTPS、重启恢复及短时并发基线已通过；生产域名、真实负载和目标环境未验收                                                            |
 | 品牌                         | 文本配置与静态 PNG/JPEG/WebP 品牌文件接收已实现；Logo/favicon 可上传、预览、应用、读取与清除                                                   |
 | 临时对象治理                 | 到期无引用对象的定时回收与 GC 栅栏已实现并通过 PostgreSQL/Local 集成测试；全量对象对账和长期压力仍待验证                                       |

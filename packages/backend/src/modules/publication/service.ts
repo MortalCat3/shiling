@@ -1,3 +1,4 @@
+import { requireStorageLocation } from '../../storage/binding.js';
 import { randomUUID } from 'node:crypto';
 import type { PublicAsset } from '@shiling/contracts';
 import type { Database, Queryable, Transaction } from '../../ports/database.js';
@@ -84,7 +85,7 @@ async function publicById(db: Queryable, id: string, lock = false): Promise<Publ
 async function publicArtifacts(db: Queryable, snapshotId: string): Promise<ArtifactRow[]> {
   return (
     await db.query<ArtifactRow>(
-      `SELECT f.id,f.role,f.storage_object_id,f.media_type,f.metadata,o.bytes,o.object_key,o.state,o.integrity_state
+      `SELECT f.id,f.role,f.storage_object_id,f.media_type,f.metadata,o.bytes,o.object_key,o.backend_key,o.namespace,o.state,o.integrity_state
     FROM shiling.publication_revision_artifacts ra JOIN shiling.artifacts f ON f.id=ra.artifact_id JOIN shiling.storage_objects o ON o.id=f.storage_object_id
     WHERE ra.publication_revision_id=$1 ORDER BY f.role,f.id`,
       [snapshotId],
@@ -518,6 +519,7 @@ export function createPublicationService({
               : safeDownloadName(row.title, artifact.media_type),
         };
       });
+      requireStorageLocation(storage, content.artifact);
       const opened = await storage.open(content.artifact.object_key, range);
       return {
         ...opened,

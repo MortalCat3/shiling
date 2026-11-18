@@ -1,0 +1,19 @@
+# 连接同一 Docker 主机上已有的 PostgreSQL 容器；不会管理该数据库的生命周期。
+# 需要 Compose >= 2.24.4；与 compose.yaml 一起使用，可叠加 compose.oss.yaml。
+services:
+  postgres:
+    # 仅把基线自带数据库移出默认启动集合；不要启用此 profile 或显式启动 postgres。
+    profiles: [embedded-database]
+  migrate:
+    depends_on: !reset {}
+    networks: [backend, database_external]
+  api:
+    depends_on: !reset {}
+    networks: [backend, database_external]
+  worker:
+    networks: [backend, database_external]
+
+networks:
+  database_external:
+    external: true
+    name: ${SHILING_DATABASE_NETWORK:?configure the existing PostgreSQL Docker network}

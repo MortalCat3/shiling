@@ -10,8 +10,11 @@ const api = createApi({
   databaseUrl: 'postgresql://smoke@127.0.0.1:5432/smoke',
   migrationDatabaseUrl: null,
   migrationOwnerRole: null,
-  storageDriver: 'local',
-  localStorageRoot: fileURLToPath(new URL('../data/smoke', import.meta.url)),
+  storage: {
+    driver: 'local',
+    rootDirectory: fileURLToPath(new URL('../data/smoke', import.meta.url)),
+    namespace: 'primary',
+  },
   appOrigin: 'http://127.0.0.1:5173',
   publicOrigin: 'http://127.0.0.1:5173',
   previewOrigin: 'http://preview.localhost:3001',
@@ -38,7 +41,7 @@ try {
   assert.deepEqual(ready.json(), {
     service: 'api',
     status: 'not-ready',
-    checks: { database: false, queue: false },
+    checks: { database: false, queue: false, storage: false },
   });
   assert.equal((await api.inject({ method: 'GET', url: '/__missing__' })).statusCode, 404);
 } finally {

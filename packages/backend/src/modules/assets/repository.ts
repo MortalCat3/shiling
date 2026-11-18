@@ -28,6 +28,8 @@ export interface ArtifactRow {
   metadata: Record<string, unknown>;
   bytes: string;
   object_key: string;
+  backend_key: string;
+  namespace: string;
   state: string;
   integrity_state: string;
 }
@@ -62,7 +64,7 @@ export function requireVisibleAsset(actor: Actor, row: AssetRow): void {
 export async function artifactRows(db: Queryable, versionId: string): Promise<ArtifactRow[]> {
   return (
     await db.query<ArtifactRow>(
-      `SELECT f.id,f.role,f.storage_object_id,f.media_type,f.metadata,o.bytes,o.object_key,o.state,o.integrity_state
+      `SELECT f.id,f.role,f.storage_object_id,f.media_type,f.metadata,o.bytes,o.object_key,o.backend_key,o.namespace,o.state,o.integrity_state
     FROM shiling.artifacts f JOIN shiling.storage_objects o ON o.id=f.storage_object_id WHERE f.version_id=$1 ORDER BY f.role,f.id`,
       [versionId],
     )

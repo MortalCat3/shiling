@@ -9,3 +9,11 @@
 前端和 contracts 不依赖本包。跨包使用必须在 `package.json` 中声明工作区依赖，不能深层导入另一个包的 src 文件。
 
 模块职责见 [src/modules/README.md](src/modules/README.md)。业务服务按纵向切片逐步实现，目录和迁移存在不代表完整业务已验收。TypeScript 构建输出 `dist` 目录及类型声明。
+
+## 存储公开接口
+
+`readStorageConfig(env)` 读取 `local | oss` 配置，返回路径和位置参数，不把凭据值放入配置对象；`createStorage(config)` 创建对应适配器，OSS 启动时检查私有 Bucket 与版本控制状态。`assertStorageBinding(database, storage)` 在正式进程启动时拒绝与数据库不一致的位置；数据库应先完成迁移。`createOssStorage({client, ...})` 是官方 SDK 的适配入口，也用于注入协议测试客户端；生产入口始终使用配置工厂，没有跳过 HTTPS 的环境开关。
+
+`StoragePort.put` 流式计数和 SHA-256，最终键不可覆盖；可选 `commit(content, persist)` 必须恰好执行一次 `persist()`，用于数据库栅栏。`open(key, range?)` 返回总字节数与流，`withLocalFile` 为媒体处理提供临时文件，调用者不得持久保存该路径。`remove` 仅供引用感知 GC 调用。OSS `checkReady` 校验远端配置与连通性，不代替完整业务验收。
+
+`exportStorageBackup` / `restoreStorageBackup` 仅用于停服运维，数据库连接池应限制为 1；需搭配同一停写窗口的 PostgreSQL dump。恢复会执行安全动作并在校验全部对象后重绑定位置。配置、RAM、失败处置和实测限制见 [OSS 运维](../../docs/operations/oss-storage.md)。

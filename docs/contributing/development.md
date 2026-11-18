@@ -51,7 +51,7 @@
 - 可在浏览器中安全使用的包不能依赖 backend/media；应用不相互依赖；包的内部源码不能作为跨包公共接口。
 - contracts 仅公开浏览器可用的数据合同；数据库、凭据和存储实现归后端包。跨包仅使用公开导出。
 - PostgreSQL 与 pg-boss 的结构初始化归迁移角色，运行角色仅有必要的 schema 使用及数据权限。
-- Compose 使用 Local 独立部署基线；S3 真实目标、媒体资源预算与恢复仍需单独验证。
+- Compose 默认使用 Local，可叠加阿里云 OSS；[配置与验收](../operations/oss-storage.md)区分本地协议测试和真实云目标。新增成套恢复集成测试需要 PostgreSQL 18 的 `pg_dump`/`pg_restore` 在 PATH 中。
 - 普通 preview/worker 容器不构成不可信代码执行器。当前动效执行保持关闭，后续隔离验证不能由浏览器 sandbox/CSP 代替。
 
 当前静态导入检查的覆盖范围与限制见[基础验证记录](../operations/foundation-validation.md)。它用于约束源码依赖方向，不是运行时安全隔离。

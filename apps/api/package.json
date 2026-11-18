@@ -14,7 +14,8 @@
     "restore-safety:dev": "node --env-file-if-exists=../../.env --import tsx src/restore-safety.ts",
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "start": "node --env-file-if-exists=../../.env dist/index.js"
+    "start": "node --env-file-if-exists=../../.env dist/index.js",
+    "storage-backup": "node --env-file-if-exists=../../.env dist/storage-backup.js"
   },
   "dependencies": {
     "@fastify/cookie": "11.1.5",

@@ -6,7 +6,9 @@ import {
   createIdentityService,
   createIngestionService,
   createLibraryService,
-  createLocalStorage,
+  createStorage,
+  type StoragePort,
+  assertStorageBinding,
   createOperationsService,
   createPublicationService,
   createSettingsService,
@@ -34,11 +36,14 @@ export interface ApiRuntime {
   readonly library: LibraryService;
   readonly settings: SettingsService;
   readonly operations: OperationsService;
-  checkReady(): Promise<{ database: boolean; queue: boolean }>;
+  checkReady(): Promise<{ database: boolean; queue: boolean; storage: boolean }>;
   close(): Promise<void>;
 }
 
-export async function createApiRuntime(config: ApiConfig): Promise<ApiRuntime> {
+export async function createApiRuntime(
+  config: ApiConfig,
+  storageOverride?: StoragePort,
+): Promise<ApiRuntime> {
   const database = createDatabase({
     connectionString: config.databaseUrl,
     applicationName: 'shiling-api',
@@ -52,9 +57,15 @@ export async function createApiRuntime(config: ApiConfig): Promise<ApiRuntime> {
     invitationTtlSeconds: 24 * 60 * 60,
     recoveryTtlSeconds: 15 * 60,
   });
-  const storage = await createLocalStorage({
-    rootDirectory: config.localStorageRoot,
-    namespace: 'primary',
+  const storage = await (
+    storageOverride ? Promise.resolve(storageOverride) : createStorage(config.storage)
+  ).catch(async (error: unknown) => {
+    await database.close();
+    throw error;
+  });
+  await assertStorageBinding(database, storage).catch(async (error: unknown) => {
+    await database.close();
+    throw error;
   });
   const boss = new PgBoss({
     connectionString: config.databaseUrl,
@@ -141,7 +152,10 @@ export async function createApiRuntime(config: ApiConfig): Promise<ApiRuntime> {
       const databaseReady = await checkDatabaseReady(database);
       const queueReady =
         queueHealthy && (await boss.isInstalled()) && (await boss.schemaVersion()) !== null;
-      return { database: databaseReady, queue: queueReady };
+      const storageReady = await (storage.checkReady?.() ?? Promise.resolve(true)).catch(
+        () => false,
+      );
+      return { database: databaseReady, queue: queueReady, storage: storageReady };
     },
     async close() {
       await boss.stop({ close: true, graceful: true, timeout: 10_000 }).catch(() => undefined);

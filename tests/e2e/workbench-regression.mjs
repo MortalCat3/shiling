@@ -10,7 +10,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 const { Blob, FormData } = globalThis;
 
 const config = JSON.parse(await readFile(process.argv[2], 'utf8'));
-if (config.fixtureKind === 'docker-acceptance') {
+if (['docker-acceptance', 'local-acceptance'].includes(config.fixtureKind)) {
   const target = new URL(config.baseUrl);
   assert.equal(target.protocol, 'http:');
   assert.equal(target.hostname, '127.0.0.1');

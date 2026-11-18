@@ -1,3 +1,4 @@
+import { requireStorageLocation } from '../../storage/binding.js';
 import type { Database, Transaction } from '../../ports/database.js';
 import type { StoragePort, ContentRange } from '../../ports/storage.js';
 import type { IdentityService, MutationContext } from '../identity/service.js';
@@ -522,6 +523,7 @@ export function createAssetService({
         allowArtifactPurpose(artifact, claims.purpose, row.lifecycle === 'archived');
         return { artifact, downloadName: safeDownloadName(row.title, artifact.media_type) };
       });
+      requireStorageLocation(storage, content.artifact);
       const opened = await storage.open(content.artifact.object_key, range);
       return {
         ...opened,

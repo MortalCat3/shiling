@@ -1,8 +1,9 @@
+import { readStorageConfig, type StorageConfig } from '@shiling/backend';
 import { isAbsolute, resolve } from 'node:path';
 
 export interface WorkerConfig {
   readonly databaseUrl: string;
-  readonly localStorageRoot: string;
+  readonly storage: StorageConfig;
   readonly temporaryDirectory: string;
   readonly verificationConcurrency: number;
   readonly processingConcurrency: number;
@@ -59,11 +60,10 @@ function dedicatedDatabaseUrl(env: NodeJS.ProcessEnv): string {
 }
 
 export function readWorkerConfig(env: NodeJS.ProcessEnv = process.env): WorkerConfig {
-  const rawStorageRoot = env['SHILING_LOCAL_STORAGE_ROOT'] ?? './data/storage';
   const rawTemporaryDirectory = env['SHILING_MEDIA_TEMP_ROOT'] ?? './data/tmp';
   return Object.freeze({
     databaseUrl: dedicatedDatabaseUrl(env),
-    localStorageRoot: configuredPath(env, rawStorageRoot),
+    storage: readStorageConfig(env),
     temporaryDirectory: configuredPath(env, rawTemporaryDirectory),
     verificationConcurrency: positiveInteger(env, 'SHILING_VERIFY_CONCURRENCY', 2, 1, 32),
     processingConcurrency: positiveInteger(env, 'SHILING_PROCESS_CONCURRENCY', 2, 1, 16),

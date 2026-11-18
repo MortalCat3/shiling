@@ -42,6 +42,11 @@ export type {
 export { TASK_NAMES, type TaskName, type TaskQueue, type CleanupTask } from './ports/tasks.js';
 export { createTaskQueue } from './adapters/postgres/tasks.js';
 export { createLocalStorage } from './adapters/local/storage.js';
+export { createOssStorage, type OssClient } from './adapters/oss/storage.js';
+export { readStorageConfig, type StorageConfig } from './storage/config.js';
+export { createStorage } from './storage/factory.js';
+export { assertStorageBinding } from './storage/binding.js';
+export { exportStorageBackup, restoreStorageBackup } from './storage/backup.js';
 export {
   currentIntakePolicy,
   DEFAULT_MAX_BYTES,

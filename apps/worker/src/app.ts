@@ -4,7 +4,9 @@ import {
   TASK_NAMES,
   createStorageCleanupService,
   createDatabase,
-  createLocalStorage,
+  createStorage,
+  type StoragePort,
+  assertStorageBinding,
   createProcessingService,
   createTaskQueue,
   type MediaArtifactOutput,
@@ -73,7 +75,10 @@ function createMediaProcessor(): MediaProcessor {
   };
 }
 
-export async function createWorkerRuntime(config: WorkerConfig): Promise<WorkerRuntime> {
+export async function createWorkerRuntime(
+  config: WorkerConfig,
+  storageOverride?: StoragePort,
+): Promise<WorkerRuntime> {
   await mkdir(config.temporaryDirectory, { recursive: true, mode: 0o700 });
   const workerInstance = randomUUID();
   const database = createDatabase({
@@ -81,9 +86,15 @@ export async function createWorkerRuntime(config: WorkerConfig): Promise<WorkerR
     applicationName: 'shiling-worker-domain',
     maxConnections: Math.max(4, config.verificationConcurrency + config.processingConcurrency + 2),
   });
-  const storage = await createLocalStorage({
-    rootDirectory: config.localStorageRoot,
-    namespace: 'primary',
+  const storage = await (
+    storageOverride ? Promise.resolve(storageOverride) : createStorage(config.storage)
+  ).catch(async (error: unknown) => {
+    await database.close();
+    throw error;
+  });
+  await assertStorageBinding(database, storage).catch(async (error: unknown) => {
+    await database.close();
+    throw error;
   });
   const boss = new PgBoss({
     connectionString: config.databaseUrl,

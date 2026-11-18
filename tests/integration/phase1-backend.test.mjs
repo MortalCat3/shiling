@@ -466,8 +466,11 @@ test('首期后端：身份、图片上传、整理、公开与撤回真实 Post
         databaseUrl,
         migrationDatabaseUrl: null,
         migrationOwnerRole: null,
-        storageDriver: 'local',
-        localStorageRoot: join(fixtureRoot, 'objects'),
+        storage: {
+          driver: 'local',
+          rootDirectory: join(fixtureRoot, 'objects'),
+          namespace: 'primary',
+        },
         appOrigin,
         publicOrigin: appOrigin,
         previewOrigin: 'http://preview.localhost',
@@ -491,7 +494,7 @@ test('首期后端：身份、图片上传、整理、公开与撤回真实 Post
         settings,
         operations: {},
         async checkReady() {
-          return { database: true, queue: true };
+          return { database: true, queue: true, storage: true };
         },
         async close() {},
       },

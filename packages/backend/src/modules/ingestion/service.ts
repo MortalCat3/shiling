@@ -1,3 +1,4 @@
+import { requireStorageLocation } from '../../storage/binding.js';
 import { randomUUID } from 'node:crypto';
 import type { UploadMetadata } from '@shiling/contracts';
 import type { Database, Transaction } from '../../ports/database.js';
@@ -490,12 +491,18 @@ export function createIngestionService({
         if (contentLength !== Number(row.declared_bytes))
           throw new AppError(400, 'UPLOAD_SIZE_MISMATCH', 'Content-Length 与声明文件长度不一致。');
         const object = (
-          await tx.query<{ id: string; object_key: string }>(
-            'SELECT id,object_key FROM shiling.storage_objects WHERE upload_attempt_id=$1',
+          await tx.query<{
+            id: string;
+            object_key: string;
+            backend_key: string;
+            namespace: string;
+          }>(
+            'SELECT id,object_key,backend_key,namespace FROM shiling.storage_objects WHERE upload_attempt_id=$1',
             [attemptId],
           )
         ).rows[0];
         if (!object) throw new AppError(409, 'STORAGE_OBJECT_UNAVAILABLE', '上传对象未登记。');
+        requireStorageLocation(storage, object);
         await tx.query("UPDATE shiling.upload_attempts SET state='receiving' WHERE id=$1", [
           attemptId,
         ]);
@@ -533,8 +540,8 @@ export function createIngestionService({
               ).rows[0];
               if (!object || object.state !== 'reserved' || object.gc_token !== null)
                 throw new AppError(409, 'STORAGE_OBJECT_UNAVAILABLE', '上传对象正在回收或不可用。');
-              // The final link is an atomic local operation and runs while the storage ledger row
-              // is locked, so cleanup cannot claim the object between file commit and DB commit.
+              // Only the final immutable commit runs under the ledger lock: a local link or
+              // a bounded OSS CompleteMultipartUpload; bulk transfer has already finished.
               await persist();
               const updated = await tx.query(
                 `UPDATE shiling.storage_objects SET state='stored',bytes=$2,sha256=$3

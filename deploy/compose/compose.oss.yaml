@@ -1,0 +1,35 @@
+# 与 compose.yaml 一起使用；只有 API/worker 获得 OSS 凭据和出网能力。
+x-oss-environment: &oss-environment
+  SHILING_STORAGE_DRIVER: oss
+  SHILING_OSS_REGION: ${SHILING_OSS_REGION:?configure OSS region}
+  SHILING_OSS_BUCKET: ${SHILING_OSS_BUCKET:?configure dedicated private bucket}
+  SHILING_OSS_PREFIX: ${SHILING_OSS_PREFIX:?configure dedicated non-root prefix}
+  SHILING_OSS_ENDPOINT: ${SHILING_OSS_ENDPOINT:?configure regional HTTPS endpoint}
+  SHILING_OSS_CREDENTIALS_FILE: /run/secrets/oss_credentials
+  SHILING_OSS_TEMP_ROOT: /tmp/shiling-oss
+  SHILING_OSS_MAX_OBJECT_BYTES: ${SHILING_OSS_MAX_OBJECT_BYTES:-104857600}
+
+services:
+  api:
+    environment:
+      <<: *oss-environment
+    secrets: [oss_credentials]
+    networks: [backend, storage_egress]
+  worker:
+    environment:
+      <<: *oss-environment
+      # 下载源文件和转码结果都占用临时空间；默认降低并发以适配 100 MiB 上限。
+      SHILING_VERIFY_CONCURRENCY: ${SHILING_VERIFY_CONCURRENCY:-1}
+      SHILING_PROCESS_CONCURRENCY: ${SHILING_PROCESS_CONCURRENCY:-1}
+    secrets: [oss_credentials]
+    networks: [backend, storage_egress]
+    mem_limit: 2g
+    # 需要 Compose >= 2.24.4 的 !override，避免追加出两个 /tmp 挂载。
+    tmpfs: !override ['/tmp:size=1g,mode=1777']
+
+networks:
+  storage_egress: {}
+
+secrets:
+  oss_credentials:
+    file: ${SHILING_OSS_CREDENTIALS_FILE:?configure private OSS credentials JSON file}

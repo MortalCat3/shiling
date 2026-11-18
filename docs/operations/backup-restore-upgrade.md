@@ -77,3 +77,7 @@ docker run --rm --network none --user 0:0 --entrypoint tar \
 需要恢复升级前数据时，走“从较早备份恢复”全流程：会丢失备份点后的写入，需先确认实际数据缺口；public off、会话/grant/worker 代次更新和所有者重新公开仍然必要。回滚镜像不会自动撤销新签发令牌或恢复旧配置。
 
 PostgreSQL 主版本升级另行使用受支持的逻辑恢复或 `pg_upgrade` 方案，在副本演练并保留旧卷；不能把更高主版本写过的数据目录直接挂回旧镜像。Local 卷、S3 bucket 和数据库清理也不属于版本回滚，不执行永久删除操作。
+
+## 阿里云 OSS 增量
+
+选择 OSS 时按 [OSS 配置与成套恢复](oss-storage.md)使用 `storage:backup` 对象工具，并配对保存停写期间的数据库 dump。恢复到全新数据库和全新 OSS 前缀，逐对象校验 SHA-256 后再绑定存储位置；恢复工具会执行并验证现有恢复安全动作。Local 的既有卷恢复步骤保持有效，不要将 Local 卷归档命令用于宣称 OSS 已备份。

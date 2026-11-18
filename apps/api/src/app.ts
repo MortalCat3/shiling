@@ -87,8 +87,10 @@ export function createApi(config: ApiConfig, runtime?: ApiRuntime) {
 
   app.get('/health/ready', async (_request, reply) => {
     const checks =
-      runtime === undefined ? { database: false, queue: false } : await runtime.checkReady();
-    const ready = checks.database && checks.queue;
+      runtime === undefined
+        ? { database: false, queue: false, storage: false }
+        : await runtime.checkReady();
+    const ready = checks.database && checks.queue && checks.storage;
     reply.header('Cache-Control', 'no-store');
     return reply.code(ready ? 200 : 503).send({
       service: 'api',

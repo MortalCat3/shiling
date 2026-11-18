@@ -1,3 +1,4 @@
+import { requireStorageLocation } from '../../storage/binding.js';
 import { randomUUID } from 'node:crypto';
 import type { Readable } from 'node:stream';
 import { AppError, mapDatabaseError } from '../../errors.js';
@@ -224,11 +225,13 @@ export function createBrandingService({
       const row = (
         await database.query<{
           object_key: string;
+          backend_key: string;
+          namespace: string;
           media_type: string;
           bytes: string;
           sha256: string;
         }>(
-          `SELECT so.object_key,b.media_type,so.bytes::text bytes,so.sha256
+          `SELECT so.object_key,so.backend_key,so.namespace,b.media_type,so.bytes::text bytes,so.sha256
           FROM shiling.product_settings ps
           JOIN shiling.branding_assets b ON b.id=CASE WHEN $1::text='logo'
             THEN ps.logo_branding_asset_id ELSE ps.favicon_branding_asset_id END
@@ -239,6 +242,7 @@ export function createBrandingService({
         )
       ).rows[0];
       if (!row) throw new AppError(404, 'BRANDING_ASSET_NOT_FOUND', '品牌图片不存在。');
+      requireStorageLocation(storage, row);
       const opened = await storage.open(row.object_key);
       if (opened.bytes !== Number(row.bytes)) {
         opened.stream.destroy();

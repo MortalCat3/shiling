@@ -1,5 +1,5 @@
 import { isIP } from 'node:net';
-import { isAbsolute, resolve } from 'node:path';
+import { readStorageConfig, type StorageConfig } from '@shiling/backend';
 
 const logLevels = ['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent'] as const;
 
@@ -10,8 +10,7 @@ export interface ApiConfig {
   readonly databaseUrl: string;
   readonly migrationDatabaseUrl: string | null;
   readonly migrationOwnerRole: string | null;
-  readonly storageDriver: 'local';
-  readonly localStorageRoot: string;
+  readonly storage: StorageConfig;
   readonly appOrigin: string;
   readonly publicOrigin: string;
   readonly previewOrigin: string;
@@ -136,13 +135,6 @@ function readOrigin(env: NodeJS.ProcessEnv, name: string, fallback?: string): st
   return url.origin;
 }
 
-function resolveConfiguredPath(env: NodeJS.ProcessEnv, value: string): string {
-  if (isAbsolute(value)) return value;
-  const base = env['INIT_CWD'] ?? process.cwd();
-  if (!isAbsolute(base)) throw new Error('INIT_CWD must be an absolute path when configured.');
-  return resolve(base, value);
-}
-
 export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   const host = env['SHILING_API_HOST'] ?? '127.0.0.1';
   const hostnameValid =
@@ -166,14 +158,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
   if (databaseUrl === null) throw new Error('SHILING_DATABASE_URL must be configured.');
   const migrationDatabaseUrl = readDatabaseUrl(env, 'SHILING_MIGRATION_DATABASE_URL', false);
   const migrationOwnerRole = readOwnerRole(env);
-  const storageDriver = env['SHILING_STORAGE_DRIVER'] ?? 'local';
-  if (storageDriver !== 'local') {
-    throw new Error(
-      'SHILING_STORAGE_DRIVER must be local in this release; S3 requires its adapter.',
-    );
-  }
-  const rawStorageRoot = env['SHILING_LOCAL_STORAGE_ROOT'] ?? './data/storage';
-  const localStorageRoot = resolveConfiguredPath(env, rawStorageRoot);
+  const storage = readStorageConfig(env);
   const appOrigin = readOrigin(env, 'SHILING_APP_ORIGIN', 'http://127.0.0.1:5173');
   const publicOrigin = readOrigin(env, 'SHILING_PUBLIC_ORIGIN', appOrigin);
   const previewOrigin = readOrigin(env, 'SHILING_PREVIEW_ORIGIN', 'http://preview.localhost:3001');
@@ -199,6 +184,8 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     1_024,
     10 * 1024 * 1024 * 1024,
   );
+  if (storage.driver === 'oss' && uploadMaxBytes > storage.maxObjectBytes)
+    throw new Error('SHILING_OSS_MAX_OBJECT_BYTES must cover SHILING_UPLOAD_MAX_BYTES.');
   const temporaryObjectRetentionSeconds =
     readInteger(env, 'SHILING_TEMP_OBJECT_RETENTION_HOURS', 24, 1, 24 * 30) * 3_600;
 
@@ -209,8 +196,7 @@ export function readApiConfig(env: NodeJS.ProcessEnv = process.env): ApiConfig {
     databaseUrl,
     migrationDatabaseUrl,
     migrationOwnerRole,
-    storageDriver,
-    localStorageRoot,
+    storage,
     appOrigin,
     publicOrigin,
     previewOrigin,
